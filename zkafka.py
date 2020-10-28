@@ -12,7 +12,7 @@ class Consumer:
             "group.id": group_id,
             "client.id": client_id,
             "schema.registry.url": os.getenv("KAFKA_SCHEMA_URL"),
-            "enable.auto.commit": bool(os.getenv("KAFKA_AUTOCOMMIT")) if os.getenv("KAFKA_AUTOCOMMIT") else True,
+            "enable.auto.commit": bool(os.getenv("KAFKA_AUTOCOMMIT")),
             "session.timeout.ms": int(os.getenv("KAFKA_TIMEOUT_MS")) if os.getenv("KAFKA_TIMEOUT_MS") else 6000,
             "default.topic.config": {"auto.offset.reset": "earliest"}
         }
@@ -39,6 +39,13 @@ class Consumer:
             else:
                 traceback.print_exc()
                 #@TODO SEND TO BUGSNAG
+
+    def commit(self, msg):
+        self.consumer.commit(msg)
+
+    def close(self):
+        self.consumer.close()
+
         
 
 class Producer:

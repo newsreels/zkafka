@@ -11,5 +11,7 @@ cid = sys.argv[1]
 con = Consumer("ktest1", client_id=cid, group_id="test_group")
 while 1:
     x = con.get_data()
-    print(">>", x.value())
-    time.sleep(random.randint(3,6))
+    sleep = random.randint(3,15)
+    print(">>", x.value(), x.partition(), "  sleep:", sleep)
+    time.sleep(sleep)
+    con.commit(x)
