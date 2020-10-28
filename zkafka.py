@@ -51,8 +51,15 @@ class Consumer:
 class Producer:
     def __init__(self, topic):
         self.topic = topic
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema", topic+".json")) as fr:
-            schema = avro.loads(fr.read())
+        schema_path = os.getenv("KAFKA_SCHEMA_PATH")
+        if schema_path:
+            with open(schema_path) as fr:
+                schema = avro.loads(fr.read())
+        else:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema", topic+".json")) as fr:
+                schema = avro.loads(fr.read())
+        if not schema:
+            raise Exception("No schema provided!")
         self.producer = AvroProducer({
             "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
             "on_delivery": self.delivery_report,

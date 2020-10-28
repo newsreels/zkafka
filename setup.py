@@ -24,10 +24,13 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=URL,
+    python_requires='>=3.6',
     py_modules=['zkafka'],
+    install_requires=REQUIRED,
+    include_package_data=True,
+    license='MIT',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
     ],
-    python_requires='>=3.6',
 )
