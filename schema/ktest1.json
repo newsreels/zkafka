@@ -1,0 +1,9 @@
+{
+    "namespace": "ktest1",
+    "name": "data",
+    "type": "record",
+    "fields": [
+        {"name": "title", "type": "string"},
+        {"name": "value", "type": "int"}
+    ]
+}
