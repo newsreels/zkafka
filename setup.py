@@ -33,7 +33,7 @@ setuptools.setup(
     python_requires='>=3.6',
     py_modules=['zkafka', 'bugsnagLogger'],
     install_requires=REQUIRED,
-    package_data={'': ['*.json']},
+    package_data={'zkafka': ['*.json']},
     include_package_data=True,
     license='MIT',
     classifiers=[
