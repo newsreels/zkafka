@@ -9,7 +9,9 @@ AUTHOR = 'Alfred Ray Jayag'
 VERSION = '0.0.1'
 
 REQUIRED = [
-    'confluent-kafka[avro]'
+    'confluent-kafka[avro]',
+    'pymongo',
+    'python-dateutil'
 ]
 
 with open("README.md", "r") as fh:
