@@ -1,4 +1,5 @@
 import setuptools
+import os
 
 # Package meta-data
 NAME = 'zkafka'
@@ -14,7 +15,9 @@ REQUIRED = [
     'python-dateutil'
 ]
 
-with open("README.md", "r") as fh:
+here = os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(here, "README.md"), "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
