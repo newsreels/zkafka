@@ -1,3 +1,4 @@
 confluent-kafka[avro]
 pymongo
 python-dateutil
+bugsnag

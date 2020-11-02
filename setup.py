@@ -12,7 +12,8 @@ VERSION = '0.0.1'
 REQUIRED = [
     'confluent-kafka[avro]',
     'pymongo',
-    'python-dateutil'
+    'python-dateutil',
+    'bugsnag'
 ]
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +31,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=URL,
     python_requires='>=3.6',
-    py_modules=['zkafka'],
+    py_modules=['zkafka', 'bugsnagLogger'],
     install_requires=REQUIRED,
     include_package_data=True,
     license='MIT',
