@@ -1,4 +1,4 @@
-from confluent_kafka import avro
+from confluent_kafka import avro, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions
 from confluent_kafka import SerializingProducer, DeserializingConsumer
 from confluent_kafka.avro.serializer import SerializerError
@@ -11,9 +11,11 @@ import traceback
 from datetime import datetime
 from bson import ObjectId
 from dateutil import parser
+from logs import bugsnagLogger as bugsnag
 
 class Consumer:
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}):
+        self.topic = topic
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
         scehma_str = ""
         if schema_path:
@@ -50,7 +52,7 @@ class Consumer:
         self.last_message = None
         self.config = {
             "raise.uncommitted": bool(os.getenv("KAFKA_RAISE_UNCOMMITED")),
-            "auto.commit": bool(os.getenv("KAFKA_AUTOCOMMIT"))
+            "auto.commit": bool(os.getenv("KAFKA_COMMIT_PREVOUS"))
         }
         
     def stats_report(self, *args, **kwargs):
@@ -74,20 +76,21 @@ class Consumer:
 
     def get_data(self):
         while 1:
+            msg = None
             try:
                 if self.config["auto.commit"]:
                     if self.last_message:
                         self.commit(self.last_message)
-                elif self.config["raise.uncommited"] and self.last_message:
+                elif self.config["raise.uncommitted"] and self.last_message:
                     raise Exception("Uncommited previous message")
                 print("Waiting for data...")
                 msg = self.client.poll(3)
             except SerializerError as e:
                 traceback.print_exc()
-                #@TODO SEND TO BUGSNAG
+                bugsnag.notify(e)
             except Exception as e:
                 traceback.print_exc()
-                #@TODO SEND TO BUGSNAG
+                bugsnag.notify(e)
                 
             if msg is None:
                 continue
@@ -97,7 +100,7 @@ class Consumer:
                 pass
             else:
                 traceback.print_exc()
-                #@TODO SEND TO BUGSNAG
+                bugsnag.notify(msg.error())
 
     def commit(self, msg):
         self.client.commit(msg)
@@ -107,6 +110,16 @@ class Consumer:
     def close(self):
         self.client.close()
 
+    def assign_partition(self, num, *args):
+        topics = []
+        if isinstance(num, list) or isinstance(num, tuple):
+            for x in num:
+                topics.append(TopicPartition(self.topic, num, *args))
+        elif isinstance(num, int):
+            topics.append(TopicPartition(self.topic, num, *args))
+        else:
+            raise Exception("Invalid argument num type:{}. Must be int or array of int".format(str(type(num))))
+        self.client.assign(topics)
         
 
 class Producer:
@@ -154,13 +167,17 @@ class Producer:
     def delivery_report(self, err, msg):
         if err is not None:
             print("Delivery failed: {}".format(err))
-            #@TODO SEND TO BUGSNAG
+            bugsnag.notify(err)
         else:
             print("Delivered {} [{}]".format(msg.topic(), msg.partition()))
             
     def send_data(self, msg, flush=False):
         self.client.poll(0)
-        self.client.produce(topic=self.topic, value=msg)
+        try:
+            self.client.produce(topic=self.topic, value=msg)
+        except ValueError as e:
+            bugsnag.notify(e)
+            traceback.print_exc()
         if flush:
             self.client.flush()
 
@@ -175,29 +192,34 @@ class Admin:
             "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
         }
         self.client = AdminClient(settings)
+        schema_settings = {
+            "url": os.getenv("KAFKA_SCHEMA_URL"),
+        }
+        self.client_schema = SchemaRegistryClient(schema_settings)
 
     def new_topic(self, topic, partition, **kwargs):
         return self.client.create_topics([NewTopic(topic, partition, **kwargs)])
     
     def new_parition(self, topic, partition):
         return self.client.create_partitions([NewPartitions(topic, partition)])
-
-class SchemaReg:
-    def __init__(self):
-        settings = {
-            "url": os.getenv("KAFKA_SCHEMA_URL"),
-        }
-        self.client = SchemaRegistryClient(settings)
         
     def get_subjects(self):
-        return self.client.get_subjects()
+        return self.client_schema.get_subjects()
 
     def get_versions(self, subject):
-        return self.client.get_versions(subject)
+        return self.client_schema.get_versions(subject)
 
     def get_schema_version(self, subject, version):
-        return self.client.get_version(subject, version)
+        return self.client_schema.get_version(subject, version)
 
     def schema_upsert(self, subject, schema_str, schema_type="AVRO"):
         schema = Schema(schema_str=schema_str, schema_type=schema_type)
-        return self.client.register_schema(subject_name=subject, schema=schema)
+        return self.client_schema.register_schema(subject_name=subject, schema=schema)
+
+    def delete_topic_subject(self, topic, value=True, key=False):
+        fa = self.client.delete_topics([topic])
+        if value:
+            fs = self.client_schema.delete_subject([topic+"-value"])
+        if key:
+            fs = self.client_schema.delete_subject([topic+"-key"])
+        return fa, fs
