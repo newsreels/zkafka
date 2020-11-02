@@ -1,0 +1,27 @@
+{
+    "namespace": "nib.pipe1.avro",
+    "name": "Article",
+    "type": "record",
+    "fields": [
+        {"name": "_id", "type": ["null", "string"]},
+        {"name": "link", "type": "string"},
+        {"name": "source", "type": "string"},
+        {"name": "parentText", "type": {"type": "array", "items": ["null", "string"]}},
+        {"name": "parentLink", "type": {"type": "array", "items": ["null", "string"]}},
+        {"name": "category", "type": ["null", "string"]},
+        {"name": "title", "type": ["null", "string"]},
+        {"name": "bullets", "type": ["null", "string", {"type": "array", "items": ["null", "string"]}]},
+        {"name": "fullarticle", "type": ["null", "string"]},
+        {"name": "articleimagelink", "type": ["null", "string"]},
+        {"name": "time", "type": ["null", "string"]},
+        {"name": "imagedata", "type": ["null", "string"]},
+        {"name": "keywords", "type": ["null", "string", {"type": "array", "items": ["null", "string"]}]},
+        {"name": "language", "type": ["null", "string"]},
+        {"name": "pipelineStatus", "type": ["null", "string"]},
+        {"name": "pageType", "type": ["null", "string"]},
+        {"name": "locked", "type": ["null", "string"]},
+        {"name": "aibullets", "type": ["null", "string", {"type": "array", "items": {"type": "array", "items": ["null", "string"]}}]},
+        {"name": "telegram_Status", "type": ["null", "string"]},
+        {"name": "parasum", "type": ["null", "string"]}
+    ]
+}
