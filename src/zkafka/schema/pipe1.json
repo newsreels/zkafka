@@ -1,5 +1,5 @@
 {
-    "namespace": "nib.pipe1.avro",
+    "namespace": "app.newsinbullets",
     "name": "Article",
     "type": "record",
     "fields": [

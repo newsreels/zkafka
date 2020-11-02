@@ -31,9 +31,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=URL,
     python_requires='>=3.6',
-    py_modules=['zkafka', 'bugsnagLogger'],
+    packages=setuptools.find_packages(where='src'),
     install_requires=REQUIRED,
-    package_data={'zkafka': ['*.json']},
     include_package_data=True,
     license='MIT',
     classifiers=[

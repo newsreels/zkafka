@@ -11,7 +11,7 @@ import traceback
 from datetime import datetime
 from bson import ObjectId
 from dateutil import parser
-import bugsnagLogger as bugsnag
+from logs import bugsnagLogger as bugsnag
 
 class Consumer:
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}):
