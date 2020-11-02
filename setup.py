@@ -31,6 +31,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=URL,
     python_requires='>=3.6',
+    package_dir={'': 'src'},
     packages=setuptools.find_packages(where='src', include=['zkafka']),
     install_requires=REQUIRED,
     include_package_data=True,
