@@ -47,6 +47,14 @@ class Consumer:
             settings.update(config)
         self.client = DeserializingConsumer(settings)
         self.client.subscribe([topic])
+        self.last_message = None
+        self.config = {
+            "raise.uncommitted": bool(os.getenv("KAFKA_RAISE_UNCOMMITED")),
+            "auto.commit": bool(os.getenv("KAFKA_AUTOCOMMIT"))
+        }
+        
+    def stats_report(self, *args, **kwargs):
+        print("iii", args, kwargs)
         
     def deserialize(self, data, ctx):
         if "_id" in data:
@@ -67,9 +75,17 @@ class Consumer:
     def get_data(self):
         while 1:
             try:
+                if self.config["auto.commit"]:
+                    if self.last_message:
+                        self.commit(self.last_message)
+                elif self.config["raise.uncommited"] and self.last_message:
+                    raise Exception("Uncommited previous message")
                 print("Waiting for data...")
                 msg = self.client.poll(3)
             except SerializerError as e:
+                traceback.print_exc()
+                #@TODO SEND TO BUGSNAG
+            except Exception as e:
                 traceback.print_exc()
                 #@TODO SEND TO BUGSNAG
                 
@@ -85,6 +101,8 @@ class Consumer:
 
     def commit(self, msg):
         self.client.commit(msg)
+        if self.last_message == msg:
+            self.last_message = None
 
     def close(self):
         self.client.close()

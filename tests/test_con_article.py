@@ -13,8 +13,8 @@ while 1:
     try:
         x = con.get_data()
         sleep = random.randint(3,15)
-        print(x)
-        print(">>", x.value(),"\n", x.partition(), "  sleep:", sleep)
+        print(x.value()['title'])
+        print(">>", x.value()['title'],"\n", x.partition(), "  sleep:", sleep)
         time.sleep(sleep)
         con.commit(x)
     except KeyboardInterrupt:
