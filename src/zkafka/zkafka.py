@@ -9,9 +9,8 @@ from confluent_kafka.serialization import StringDeserializer, StringSerializer
 import os
 import traceback
 from datetime import datetime
-from bson import ObjectId
 from dateutil import parser
-from logs import bugsnagLogger as bugsnag
+from . import bugsnagLogger as bugsnag
 
 class Consumer:
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}):
@@ -23,7 +22,7 @@ class Consumer:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
         else:
-            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema", topic+".json")) as fr:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "article.json")) as fr:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
         if not schema:
@@ -59,9 +58,6 @@ class Consumer:
         print("iii", args, kwargs)
         
     def deserialize(self, data, ctx):
-        if "_id" in data:
-            if isinstance(data["_id"], str):
-                data["_id"] = ObjectId(data["_id"])
         if "time" in data:
             if isinstance(data["time"], str):
                 try:
@@ -132,7 +128,7 @@ class Producer:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
         else:
-            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema", topic+".json")) as fr:
+            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "article.json")) as fr:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
         if not schema:
@@ -154,11 +150,15 @@ class Producer:
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):
-        if "_id" in data:
-            data["_id"] = str(data["_id"])
+        keys = ["link", "source", "parentText", "category", "title", "bullets", "fullarticle", "image", "time", "keywords", "language", "parasum"]
+        if "articleimagelink" in data:
+            data["image"] = data["articleimagelink"]
         if "time" in data:
             if isinstance(data["time"], datetime):
                 data["time"] = data["time"].isoformat()
+        for key in data:
+            if key not in keys:
+                del data[key]
         return data
 
     def stats_report(self, *args, **kwargs):

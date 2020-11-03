@@ -11,7 +11,6 @@ VERSION = '0.0.1'
 
 REQUIRED = [
     'confluent-kafka[avro]',
-    'pymongo',
     'python-dateutil',
     'bugsnag'
 ]
@@ -33,6 +32,7 @@ setuptools.setup(
     python_requires='>=3.6',
     package_dir={'': 'src'},
     packages=setuptools.find_packages(where='src', include=['zkafka']),
+    package_data = {'': ['data/article.json']},
     install_requires=REQUIRED,
     include_package_data=True,
     license='MIT',
