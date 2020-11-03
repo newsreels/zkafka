@@ -156,9 +156,12 @@ class Producer:
         if "time" in data:
             if isinstance(data["time"], datetime):
                 data["time"] = data["time"].isoformat()
+        prune = []
         for key in data:
             if key not in keys:
-                del data[key]
+                prune.append(key)
+        for key in prune:
+            del data[key]
         return data
 
     def stats_report(self, *args, **kwargs):

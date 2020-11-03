@@ -1,6 +1,8 @@
 import os
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+_root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
+print("ROOT", _root)
+sys.path.insert(0, _root)
 import traceback
 from zkafka import Producer
 from pymongo import MongoClient
@@ -18,7 +20,7 @@ if len(sys.argv) > 1:
         total = int(sys.argv[2])
     except:
         traceback.print_exc()
-prod = Producer('pipe1')
+prod = Producer('pipe2')
 
 print(">>", pipe)
 for art in articles.aggregate([ { '$match': { 'pipelineStatus': pipe } }, { '$sample': { 'size': total } } ]):

@@ -8,7 +8,7 @@ import random
 
 cid = sys.argv[1]
 
-con = Consumer("pipe1", client_id=cid, group_id="art_group")
+con = Consumer("pipe2", client_id=cid, group_id="art_group")
 while 1:
     try:
         x = con.get_data()
