@@ -7,7 +7,7 @@ DESCRIPTION = 'Simple Kafka Avro Consumers and Producers for Ziro Pipeline'
 URL = 'https://github.com/ziroride/zkafka'
 EMAIL = 'alfred@newsinbullets.com'
 AUTHOR = 'Alfred Ray Jayag'
-VERSION = '0.0.1'
+VERSION = '1.0.0'
 
 REQUIRED = [
     'confluent-kafka[avro]',

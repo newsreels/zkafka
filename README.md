@@ -3,8 +3,8 @@
 ## Environments
 Environment | Required | Default | Description
 --- | --- | --- | ---
-KAFKA_BROKERS | true | none | Broker url
-KAFKA_SCHEMA_URL | true | none | Schema registry url
+KAFKA_BROKERS | **true** | none | Broker url
+KAFKA_SCHEMA_URL | **true** | none | Schema registry url
 KAFKA_SCHEMA_PATH | false | `local data` | Custom schema directory named `{topic}.json`
 KAFKA_AUTOCOMMIT | false | false | Kafka autocommit on retrieve message
 KAFKA_TIMEOUT_MS | false | 6000 | kafka timeout is milliseconds
