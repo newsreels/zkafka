@@ -20,17 +20,17 @@ if len(sys.argv) > 1:
         total = int(sys.argv[2])
     except:
         traceback.print_exc()
-prod = Producer('pipe2')
+prod = Producer('pipe3')
 
 print(">>", pipe)
 for art in articles.aggregate([ { '$match': { 'pipelineStatus': pipe } }, { '$sample': { 'size': total } } ]):
-    print(art["_id"])
-    print(art["title"])
+    print(">>", art["_id"])
+    print(">>", art["title"])
     try:
         prod.send_data(art)
     except Exception as e:
         print("\n\n")
-        print(art)
+        print("!!!", art["_id"])
         print("\n\n")
         raise e
 prod.flush()

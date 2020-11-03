@@ -12,10 +12,9 @@ from datetime import datetime
 from dateutil import parser
 from . import bugsnagLogger as bugsnag
 
-class Consumer:
-    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False):
-        self.topic = topic
-        self.verbose = verbose
+
+class BaseClient:
+    def __init__(self, topic):
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
         scehma_str = ""
         if schema_path:
@@ -31,10 +30,48 @@ class Consumer:
         schema_settings = {
             "url": os.getenv("KAFKA_SCHEMA_URL"),
         }
-        self.schema_registry_client = SchemaRegistryClient(schema_settings)
-        avro_deserializer = AvroDeserializer(scehma_str, self.schema_registry_client, self.deserialize)
+        if os.getenv("KAFKA_USE_SSL"):
+            schema_settings.update({
+                "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe",
+                "ssl.key.location": os.getenv("KAFKA_SSL_PRIV_PATH"),
+                "ssl.certificate.location": os.getenv("KAFKA_SSL_PUB_KEY"),
+                "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET"), #<api-key>:<api-secret>
+            })
+        else:
+            schema_settings.update({
+                "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET") #<api-key>:<api-secret>
+            })
+
         settings = {
             "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
+        }
+        if os.getenv("KAFKA_USE_SSL"):
+            settings.update({
+                "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
+                "sasl.mechanism": "PLAIN",
+                "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe", #/usr/local/etc/openssl/cert.pem
+                "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
+                "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
+            })
+        else:
+            settings.update({
+                "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
+                "sasl.mechanism": os.getenv("KAFKA_SASL_MECHANISM") or "PLAIN",
+                "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
+                "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
+            })
+
+        self._schema_str = scehma_str
+        self._client_settings = settings
+        self.schema_registry_client = SchemaRegistryClient(schema_settings)
+
+class Consumer(BaseClient):
+    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False):
+        super().__init__(topic)
+        self.topic = topic
+        self.verbose = verbose
+        avro_deserializer = AvroDeserializer(self._schema_str, self.schema_registry_client, self.deserialize)
+        settings = {
             "key.deserializer": StringDeserializer("utf-8"),
             "value.deserializer": avro_deserializer,
             "group.id": group_id,
@@ -43,10 +80,11 @@ class Consumer:
             "session.timeout.ms": int(os.getenv("KAFKA_TIMEOUT_MS")) if os.getenv("KAFKA_TIMEOUT_MS") else 6000,
             "auto.offset.reset": "earliest"
         }
-        if not os.getenv("KAFKA_NO_SSL"):
-            settings.update({"security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SSL"})
+            
         if config:
             settings.update(config)
+
+        settings.update(self._client_settings)
         self.client = DeserializingConsumer(settings)
         self.client.subscribe([topic])
         self.last_message = None
@@ -56,7 +94,8 @@ class Consumer:
         }
         
     def stats_report(self, *args, **kwargs):
-        print("iii", args, kwargs)
+        if self.verbose:
+            print("iii", args, kwargs)
         
     def deserialize(self, data, ctx):
         if "time" in data:
@@ -120,36 +159,23 @@ class Consumer:
         self.client.assign(topics)
         
 
-class Producer:
+class Producer(BaseClient):
     def __init__(self, topic, config={}, verbose=False):
+        super().__init__(topic)
         self.topic = topic
         self.verbose = verbose
-        schema_path = os.getenv("KAFKA_SCHEMA_PATH")
-        scehma_str = ""
-        if schema_path:
-            with open(os.path.join(schema_path, topic+".json")) as fr:
-                scehma_str = fr.read()
-                schema = avro.loads(scehma_str)
-        else:
-            with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "article.json")) as fr:
-                scehma_str = fr.read()
-                schema = avro.loads(scehma_str)
-        if not schema:
-            raise Exception("No schema provided!")
-        schema_settings = {
-            "url": os.getenv("KAFKA_SCHEMA_URL"),
-        }
-        self.schema_registry_client = SchemaRegistryClient(schema_settings)
-        avro_serializer = AvroSerializer(scehma_str, self.schema_registry_client, self.serialize)
+        avro_serializer = AvroSerializer(self._schema_str, self.schema_registry_client, self.serialize)
         settings = {
-            "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
             "on_delivery": self.delivery_report,
             "key.serializer": StringSerializer('utf-8'),
             "value.serializer": avro_serializer,
             "stats_cb": self.stats_report,
         }
+
         if config:
             settings.update(config)
+
+        settings.update(self._client_settings)
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):
@@ -168,7 +194,8 @@ class Producer:
         return data
 
     def stats_report(self, *args, **kwargs):
-        print("iii", args, kwargs)
+        if self.verbose:
+            print("iii", args, kwargs)
 
     def delivery_report(self, err, msg):
         if err is not None:
