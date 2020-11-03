@@ -13,8 +13,9 @@ from dateutil import parser
 from . import bugsnagLogger as bugsnag
 
 class Consumer:
-    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}):
+    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False):
         self.topic = topic
+        self.verbose = verbose
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
         scehma_str = ""
         if schema_path:
@@ -79,7 +80,8 @@ class Consumer:
                         self.commit(self.last_message)
                 elif self.config["raise.uncommitted"] and self.last_message:
                     raise Exception("Uncommited previous message")
-                print("Waiting for data...")
+                if self.verbose:
+                    print("Waiting for data...")
                 msg = self.client.poll(3)
             except SerializerError as e:
                 traceback.print_exc()
@@ -119,8 +121,9 @@ class Consumer:
         
 
 class Producer:
-    def __init__(self, topic, config={}):
+    def __init__(self, topic, config={}, verbose=False):
         self.topic = topic
+        self.verbose = verbose
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
         scehma_str = ""
         if schema_path:
@@ -172,7 +175,8 @@ class Producer:
             print("Delivery failed: {}".format(err))
             bugsnag.notify(err)
         else:
-            print("Delivered {} [{}]".format(msg.topic(), msg.partition()))
+            if self.verbose:
+                print("Delivered {} [{}]".format(msg.topic(), msg.partition()))
             
     def send_data(self, msg, flush=False):
         self.client.poll(0)
