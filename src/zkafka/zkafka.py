@@ -37,7 +37,7 @@ class BaseClient:
                 "ssl.certificate.location": os.getenv("KAFKA_SSL_PUB_KEY"),
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET"), #<api-key>:<api-secret>
             })
-        else:
+        elif not os.getenv("KAFKA_USE_LOCAL"):
             schema_settings.update({
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET") #<api-key>:<api-secret>
             })
@@ -53,7 +53,7 @@ class BaseClient:
                 "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
                 "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
             })
-        else:
+        elif not os.getenv("KAFKA_USE_LOCAL"):
             settings.update({
                 "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
                 "sasl.mechanism": os.getenv("KAFKA_SASL_MECHANISM") or "PLAIN",
