@@ -20,6 +20,7 @@ KAFKA_SCHEMA_API_KEY | **TRUE** | none | Schema Registry API Key
 KAFKA_SCHEMA_API_SECRET | **TRUE** | none | Schema Registry API Secret
 KAFKA_RAISE_UNCOMMITED | false | false | Raise exception if previous message is uncommitted on next poll
 KAFKA_COMMIT_PREVOUS | false | false | Commit last message if uncommitted on next poll
+KAFKA_USE_LOCAL | false | false | **API Keys** will not be required
 
 ## Usage
 ### zkafka.Consumer
