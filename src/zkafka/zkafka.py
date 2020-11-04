@@ -37,7 +37,7 @@ class BaseClient:
                 "ssl.certificate.location": os.getenv("KAFKA_SSL_PUB_KEY"),
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET"), #<api-key>:<api-secret>
             })
-        else:
+        elif not os.getenv("KAFKA_USE_LOCAL"):
             schema_settings.update({
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET") #<api-key>:<api-secret>
             })
@@ -53,7 +53,7 @@ class BaseClient:
                 "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
                 "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
             })
-        else:
+        elif not os.getenv("KAFKA_USE_LOCAL"):
             settings.update({
                 "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
                 "sasl.mechanism": os.getenv("KAFKA_SASL_MECHANISM") or "PLAIN",
@@ -110,7 +110,8 @@ class Consumer(BaseClient):
                     
         return data
 
-    def get_data(self):
+    def get_data(self, value=False):
+        wait = 1
         while 1:
             msg = None
             try:
@@ -119,7 +120,8 @@ class Consumer(BaseClient):
                         self.commit(self.last_message)
                 elif self.config["raise.uncommitted"] and self.last_message:
                     raise Exception("Uncommited previous message")
-                if self.verbose:
+                if wait:
+                    wait = 0
                     print("Waiting for data...")
                 msg = self.client.poll(3)
             except SerializerError as e:
@@ -132,10 +134,16 @@ class Consumer(BaseClient):
             if msg is None:
                 continue
             elif not msg.error():
-                return msg
+                wait = 1
+                if value:
+                    return msg.value()
+                else:
+                    return msg
             elif msg.error().code() == KafkaError._PARTITION_EOF:
+                wait = 1
                 pass
             else:
+                wait = 1
                 traceback.print_exc()
                 bugsnag.notify(msg.error())
 
