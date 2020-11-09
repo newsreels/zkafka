@@ -11,6 +11,7 @@ import traceback
 from datetime import datetime
 from dateutil import parser
 from . import bugsnagLogger as bugsnag
+import uuid
 
 
 class BaseClient:
@@ -216,7 +217,7 @@ class Producer(BaseClient):
     def send_data(self, msg, flush=False):
         self.client.poll(0)
         try:
-            self.client.produce(topic=self.topic, value=msg)
+            self.client.produce(topic=self.topic, value=msg, key=str(uuid.uuid4()))
         except ValueError as e:
             bugsnag.notify(e)
             traceback.print_exc()
