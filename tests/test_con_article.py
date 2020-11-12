@@ -6,9 +6,9 @@ import sys
 import time
 import random
 
-cid = sys.argv[1]
+topic = sys.argv[1]
 
-con = Consumer("pipe3", client_id=cid, group_id="art_group")
+con = Consumer(topic, client_id="con-1", group_id="art_group")
 while 1:
     try:
         x = con.get_data()
