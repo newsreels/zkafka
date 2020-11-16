@@ -260,9 +260,16 @@ class Admin:
         return self.client_schema.register_schema(subject_name=subject, schema=schema)
 
     def delete_topic_subject(self, topic, value=True, key=False):
-        fa = self.client.delete_topics([topic])
+        fa = self.delete_topic(topic)
+        fsv, fsk = self.delete_subject(topic, value, key)
+        return fa, fsv, fsk
+
+    def delete_topic(self, topic):
+        return self.client.delete_topic([topic])
+    
+    def delete_subject(self, topic, value=True, key=False):
         if value:
-            fs = self.client_schema.delete_subject([topic+"-value"])
+            fsv = self.client_schema.delete_subject(topic+"-value")
         if key:
-            fs = self.client_schema.delete_subject([topic+"-key"])
-        return fa, fs
+            fsk = self.client_schema.delete_subject(topic+"-key")
+        return fsv, fsk

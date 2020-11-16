@@ -13,16 +13,18 @@ articles = db.articles
 
 total = 1
 pipe = "6"
+topic = "prod_pipe"
 if len(sys.argv) > 1:
     try:
         print(sys.argv[1])
-        pipe = sys.argv[1]
-        total = int(sys.argv[2])
+        topic = sys.argv[1]
+        pipe = sys.argv[2]
+        total = int(sys.argv[3])
     except:
         traceback.print_exc()
-prod = Producer('pipe3')
+prod = Producer(topic)
 
-print(">>", pipe)
+print(">>", topic, pipe)
 for art in articles.aggregate([ { '$match': { 'pipelineStatus': pipe } }, { '$sample': { 'size': total } } ]):
     print(">>", art["_id"])
     print(">>", art["title"])
