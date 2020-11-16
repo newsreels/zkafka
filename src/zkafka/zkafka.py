@@ -12,6 +12,7 @@ from datetime import datetime
 from dateutil import parser
 from . import bugsnagLogger as bugsnag
 import uuid
+import threading
 
 
 class BaseClient:
@@ -67,10 +68,11 @@ class BaseClient:
         self.schema_registry_client = SchemaRegistryClient(schema_settings)
 
 class Consumer(BaseClient):
-    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False):
+    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None):
         super().__init__(topic)
         self.topic = topic
         self.verbose = verbose
+        self.kill_flag = kill_event or threading.Event()
         avro_deserializer = AvroDeserializer(self._schema_str, self.schema_registry_client, self.deserialize)
         settings = {
             "key.deserializer": StringDeserializer("utf-8"),
@@ -111,9 +113,18 @@ class Consumer(BaseClient):
                     
         return data
 
+    def get_kill_flag(self):
+        return self.kill_flag
+
+    def kill(self, value=True):
+        if value:
+            self.kill_flag.set()
+        else:
+            self.kill_flag.clear()
+
     def get_data(self, value=False):
         wait = 1
-        while 1:
+        while not self.kill_flag.is_set():
             msg = None
             try:
                 if self.config["auto.commit"]:
@@ -188,7 +199,7 @@ class Producer(BaseClient):
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):
-        keys = ["link", "source", "parentText", "category", "title", "bullets", "fullarticle", "image", "time", "keywords", "language", "parasum"]
+        keys = ["link", "source", "parentText", "category", "title", "bullets", "fullarticle", "image", "time", "keywords", "language", "parasum", "tag"]
         if "articleimagelink" in data:
             data["image"] = data["articleimagelink"]
         if "time" in data:

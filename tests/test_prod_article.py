@@ -28,6 +28,7 @@ print(">>", topic, pipe)
 for art in articles.aggregate([ { '$match': { 'pipelineStatus': pipe } }, { '$sample': { 'size': total } } ]):
     print(">>", art["_id"])
     print(">>", art["title"])
+    print(art.keys())
     try:
         prod.send_data(art)
     except Exception as e:
