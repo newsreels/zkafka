@@ -13,20 +13,24 @@ from dateutil import parser
 from . import bugsnagLogger as bugsnag
 import uuid
 import threading
+import json
 
 
 class BaseClient:
     def __init__(self, topic):
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
         scehma_str = ""
+        self.schema_json = {}
         if schema_path:
             with open(os.path.join(schema_path, topic+".json")) as fr:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
+                self.schema_json = json.loads(scehma_str)
         else:
             with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "article.json")) as fr:
                 scehma_str = fr.read()
                 schema = avro.loads(scehma_str)
+                self.schema_json = json.loads(scehma_str)
         if not schema:
             raise Exception("No schema provided!")
         schema_settings = {
@@ -180,10 +184,11 @@ class Consumer(BaseClient):
         
 
 class Producer(BaseClient):
-    def __init__(self, topic, config={}, verbose=False):
+    def __init__(self, topic, config={}, verbose=False, prune=True):
         super().__init__(topic)
         self.topic = topic
         self.verbose = verbose
+        self.prune = prune
         avro_serializer = AvroSerializer(self._schema_str, self.schema_registry_client, self.serialize)
         settings = {
             "on_delivery": self.delivery_report,
@@ -199,19 +204,21 @@ class Producer(BaseClient):
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):
-        keys = ["link", "source", "parentText", "category", "title", "bullets", "fullarticle", "image", "time", "keywords", "language", "parasum", "tag"]
+        # keys = ["link", "source", "parentText", "category", "title", "bullets", "fullarticle", "image", "time", "keywords", "language", "parasum", "tag"]
+        keys = [x['name'] for x in self.schema_json['fields']]
         if "articleimagelink" in data:
             data["image"] = data["articleimagelink"]
         if "time" in data:
             if isinstance(data["time"], datetime):
                 data["time"] = data["time"].isoformat()
-        prune = []
-        for key in data:
-            if key not in keys:
-                prune.append(key)
-        for key in prune:
-            del data[key]
-        return data
+        if self.prune:
+            prune = []
+            for key in data:
+                if key not in keys:
+                    prune.append(key)
+            for key in prune:
+                del data[key]
+            return data
 
     def stats_report(self, *args, **kwargs):
         if self.verbose:
