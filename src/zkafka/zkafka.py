@@ -1,7 +1,11 @@
+import io
+import struct
+from avro.io import BinaryDecoder, DatumReader
 from confluent_kafka import avro, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions
 from confluent_kafka import SerializingProducer, DeserializingConsumer
 from confluent_kafka.avro.serializer import SerializerError
+from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
 from confluent_kafka import avro, KafkaError
 from confluent_kafka.schema_registry import SchemaRegistryClient, Schema
 from confluent_kafka.schema_registry.avro import AvroDeserializer, AvroSerializer
@@ -19,18 +23,18 @@ import json
 class BaseClient:
     def __init__(self, topic):
         schema_path = os.getenv("KAFKA_SCHEMA_PATH")
-        scehma_str = ""
+        schema_str = ""
         self.schema_json = {}
         if schema_path:
-            with open(os.path.join(schema_path, topic+".json")) as fr:
-                scehma_str = fr.read()
-                schema = avro.loads(scehma_str)
-                self.schema_json = json.loads(scehma_str)
+            with open(schema_path) as fr:
+                schema_str = fr.read()
+                schema = avro.loads(schema_str)
+                self.schema_json = json.loads(schema_str)
         else:
             with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "article.json")) as fr:
-                scehma_str = fr.read()
-                schema = avro.loads(scehma_str)
-                self.schema_json = json.loads(scehma_str)
+                schema_str = fr.read()
+                schema = avro.loads(schema_str)
+                self.schema_json = json.loads(schema_str)
         if not schema:
             raise Exception("No schema provided!")
         schema_settings = {
@@ -67,9 +71,9 @@ class BaseClient:
                 "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
             })
 
-        self._schema_str = scehma_str
+        self._schema_str = schema_str
         self._client_settings = settings
-        self.schema_registry_client = SchemaRegistryClient(schema_settings)
+        self._schema_settings = schema_settings
 
 class Consumer(BaseClient):
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None):
@@ -77,10 +81,9 @@ class Consumer(BaseClient):
         self.topic = topic
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
-        avro_deserializer = AvroDeserializer(self._schema_str, self.schema_registry_client, self.deserialize)
+        self.register_client = CachedSchemaRegistryClient(url="http://localhost:8081")
         settings = {
             "key.deserializer": StringDeserializer("utf-8"),
-            "value.deserializer": avro_deserializer,
             "group.id": group_id,
             "client.id": client_id,
             "enable.auto.commit": bool(os.getenv("KAFKA_AUTOCOMMIT")),
@@ -103,19 +106,6 @@ class Consumer(BaseClient):
     def stats_report(self, *args, **kwargs):
         if self.verbose:
             print("iii", args, kwargs)
-        
-    def deserialize(self, data, ctx):
-        if "time" in data:
-            if isinstance(data["time"], str):
-                try:
-                    data["time"] = datetime.fromisoformat(data["time"])
-                except:
-                    try:
-                        data["time"] = parser.parse(data["time"])
-                    except:
-                        pass
-                    
-        return data
 
     def get_kill_flag(self):
         return self.kill_flag
@@ -163,6 +153,23 @@ class Consumer(BaseClient):
                 traceback.print_exc()
                 bugsnag.notify(msg.error())
 
+    def unpack(self, payload):
+        magic, schema_id = struct.unpack('>bi', payload[:5])
+
+        # Get Schema registry
+        # Avro value format
+        if magic == 0:
+            schema = self.register_client.get_by_id(schema_id)
+            reader = DatumReader(schema)
+            output = BinaryDecoder(io.BytesIO(payload[5:]))
+            abc = reader.read(output)
+            return abc
+        # String key
+        else:
+            # If KSQL payload, exclude timestamp which is inside the key. 
+            # payload[:-8].decode()
+            return payload.decode()
+
     def commit(self, msg):
         self.client.commit(msg)
         if self.last_message == msg:
@@ -189,6 +196,7 @@ class Producer(BaseClient):
         self.topic = topic
         self.verbose = verbose
         self.prune = prune
+        self.schema_registry_client = SchemaRegistryClient(self._schema_settings)
         avro_serializer = AvroSerializer(self._schema_str, self.schema_registry_client, self.serialize)
         settings = {
             "on_delivery": self.delivery_report,
