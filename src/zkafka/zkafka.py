@@ -19,6 +19,7 @@ import uuid
 import threading
 import json
 
+VERBOSE = os.getenv("KAFKA_VERBOSE")
 
 class BaseClient:
     def __init__(self, topic):
@@ -37,6 +38,8 @@ class BaseClient:
                 self.schema_json = json.loads(schema_str)
         if not schema:
             raise Exception("No schema provided!")
+        if VERBOSE:
+            print("SCHEMA_PATH: ", schema_path)
         schema_settings = {
             "url": os.getenv("KAFKA_SCHEMA_URL"),
         }
@@ -49,6 +52,7 @@ class BaseClient:
             })
         elif not os.getenv("KAFKA_USE_LOCAL"):
             schema_settings.update({
+                'basic.auth.credentials.source': 'user_info',
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET") #<api-key>:<api-secret>
             })
 
@@ -72,6 +76,8 @@ class BaseClient:
             })
 
         self._schema_str = schema_str
+        if VERBOSE:
+            print("SCHEMA_STR: ", self._schema_str)
         self._client_settings = settings
         self._schema_settings = schema_settings
 
@@ -81,7 +87,7 @@ class Consumer(BaseClient):
         self.topic = topic
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
-        self.register_client = CachedSchemaRegistryClient(url="http://localhost:8081")
+        self.register_client = CachedSchemaRegistryClient(self._schema_settings)
         settings = {
             "key.deserializer": StringDeserializer("utf-8"),
             "group.id": group_id,
@@ -95,8 +101,12 @@ class Consumer(BaseClient):
             settings.update(config)
 
         settings.update(self._client_settings)
+        if VERBOSE:
+            print("_SETTINGS: ", settings)
+        if VERBOSE:
+            print("CONSUMER_TOPIC: ", topic)
         self.client = DeserializingConsumer(settings)
-        self.client.subscribe([topic])
+        self.client.subscribe(topic.split(",") if "," in topic else [topic])
         self.config = {
             "raise.uncommitted": bool(os.getenv("KAFKA_RAISE_UNCOMMITED")),
             "auto.commit": bool(os.getenv("KAFKA_COMMIT_PREVOUS"))
@@ -190,6 +200,8 @@ class Producer(BaseClient):
         self.topic = topic
         self.verbose = verbose
         self.prune = prune
+        if VERBOSE:
+            print("SCHEMA_SETTINGS: ", self._schema_settings)
         self.schema_registry_client = SchemaRegistryClient(self._schema_settings)
         avro_serializer = AvroSerializer(self._schema_str, self.schema_registry_client, self.serialize)
         settings = {
@@ -203,6 +215,8 @@ class Producer(BaseClient):
             settings.update(config)
 
         settings.update(self._client_settings)
+        if VERBOSE:
+            print("PRODUCER_SETTINGS: ", settings)
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):

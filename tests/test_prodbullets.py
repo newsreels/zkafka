@@ -7,6 +7,7 @@ import traceback
 from zkafka import Producer
 from pymongo import MongoClient
 import re
+import code
 
 mongo = MongoClient()
 db = mongo.articles_db
@@ -36,6 +37,7 @@ for art in articles.aggregate([ { '$match': { 'bullets': re.compile(r"^[\S]+$") 
         print("\n\n")
         print("!!!", art["_id"])
         print("\n\n")
+        code.interact(local=locals())
         raise e
 prod.flush()
 print("Data sent")

@@ -7,6 +7,9 @@ import traceback
 from zkafka import Producer
 from pymongo import MongoClient
 
+print(os.getenv("KAFKA_SCHEMA_API_KEY"))
+print(os.getenv("KAFKA_SCHEMA_API_SECRET"))
+
 mongo = MongoClient()
 db = mongo.articles_db
 articles = db.articles
