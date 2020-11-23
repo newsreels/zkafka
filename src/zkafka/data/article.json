@@ -14,7 +14,6 @@
         {"name": "time", "type": ["null", "string"]},
         {"name": "keywords", "type": ["null", {"type": "array", "items": ["null", "string"]}]},
         {"name": "language", "type": ["null", "string"]},
-        {"name": "parasum", "type": ["null", "string"]},
-        {"name": "tag", "type": ["null", "string"]}
+        {"name": "parasum", "type": ["null", "string"]}
     ]
 }
