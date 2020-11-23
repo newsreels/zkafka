@@ -136,7 +136,7 @@ class Consumer(BaseClient):
             elif not msg.error():
                 wait = 1
                 if value:
-                    return msg.value()
+                    return self.unpack(msg.value())
                 else:
                     return msg
             elif msg.error().code() == KafkaError._PARTITION_EOF:
