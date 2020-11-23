@@ -52,7 +52,6 @@ class BaseClient:
             })
         elif not os.getenv("KAFKA_USE_LOCAL"):
             schema_settings.update({
-                'basic.auth.credentials.source': 'user_info',
                 "basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET") #<api-key>:<api-secret>
             })
 
@@ -87,6 +86,9 @@ class Consumer(BaseClient):
         self.topic = topic
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
+        self._schema_settings.update({
+                'basic.auth.credentials.source': 'user_info'
+        })
         self.register_client = CachedSchemaRegistryClient(self._schema_settings)
         settings = {
             "key.deserializer": StringDeserializer("utf-8"),
