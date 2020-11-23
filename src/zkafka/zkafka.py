@@ -97,7 +97,6 @@ class Consumer(BaseClient):
         settings.update(self._client_settings)
         self.client = DeserializingConsumer(settings)
         self.client.subscribe([topic])
-        self.last_message = None
         self.config = {
             "raise.uncommitted": bool(os.getenv("KAFKA_RAISE_UNCOMMITED")),
             "auto.commit": bool(os.getenv("KAFKA_COMMIT_PREVOUS"))
@@ -121,11 +120,6 @@ class Consumer(BaseClient):
         while not self.kill_flag.is_set():
             msg = None
             try:
-                if self.config["auto.commit"]:
-                    if self.last_message:
-                        self.commit(self.last_message)
-                elif self.config["raise.uncommitted"] and self.last_message:
-                    raise Exception("Uncommited previous message")
                 if wait:
                     wait = 0
                     print("Waiting for data...")
@@ -154,6 +148,8 @@ class Consumer(BaseClient):
                 bugsnag.notify(msg.error())
 
     def unpack(self, payload):
+        if not isinstance(payload, bytes):
+            payload = payload.value()
         magic, schema_id = struct.unpack('>bi', payload[:5])
 
         # Get Schema registry
@@ -170,10 +166,8 @@ class Consumer(BaseClient):
             # payload[:-8].decode()
             return payload.decode()
 
-    def commit(self, msg):
-        self.client.commit(msg)
-        if self.last_message == msg:
-            self.last_message = None
+    def commit(self, msg=None):
+        self.client.commit()
 
     def close(self):
         self.client.close()
