@@ -250,10 +250,10 @@ class Producer(BaseClient):
             if self.verbose:
                 print("Delivered {} [{}]".format(msg.topic(), msg.partition()))
             
-    def send_data(self, msg, flush=False):
+    def send_data(self, msg, key=None, flush=False):
         self.client.poll(0)
         try:
-            self.client.produce(topic=self.topic, value=msg, key=str(uuid.uuid4()))
+            self.client.produce(topic=self.topic, value=msg, key=key if key else str(uuid.uuid4()))
         except ValueError as e:
             bugsnag.notify(e)
             traceback.print_exc()
