@@ -15,6 +15,6 @@
         {"name": "keywords", "type": ["null", {"type": "array", "items": ["null", "string"]}]},
         {"name": "language", "type": ["null", "string"]},
         {"name": "parasum", "type": ["null", "string"]},
-        {"name": "pass", "type": ["null", "int"]}
+        {"name": "pass", "type": "int"}
     ]
 }
