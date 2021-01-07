@@ -22,8 +22,8 @@ import json
 VERBOSE = os.getenv("KAFKA_VERBOSE")
 
 class BaseClient:
-    def __init__(self, topic):
-        schema_path = os.getenv("KAFKA_SCHEMA_PATH")
+    def __init__(self, topic, schemapath=None):
+        schema_path = schemapath or os.getenv("KAFKA_SCHEMA_PATH")
         schema_str = ""
         self.schema_json = {}
         if schema_path:
@@ -197,8 +197,8 @@ class Consumer(BaseClient):
         
 
 class Producer(BaseClient):
-    def __init__(self, topic, config={}, verbose=False, prune=True):
-        super().__init__(topic)
+    def __init__(self, topic, config={}, verbose=False, prune=True, schemapath=None):
+        super().__init__(topic, schemapath)
         self.topic = topic
         self.verbose = verbose
         self.prune = prune
