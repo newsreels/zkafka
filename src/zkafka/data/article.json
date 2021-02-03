@@ -5,7 +5,6 @@
     "fields": [
         {"name": "link", "type": "string"},
         {"name": "source", "type": "string"},
-        {"name": "parentText", "type": {"type": "array", "items": ["null", "string"]}},
         {"name": "category", "type": ["null", "string"]},
         {"name": "title", "type": ["null", "string"]},
         { "name": "bullets", "type" : [ "null",
