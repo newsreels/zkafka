@@ -1,7 +1,7 @@
 from .base import Consumer as BaseConsumer
 from .base import Producer as BaseProducer
-from .avro.clients import Consumer as AvroConsumer
-from .avro.clients import Producer as AvroProducer
+from .avro import Consumer as AvroConsumer
+from .avro import Producer as AvroProducer
 import os
 
 class Consumer:

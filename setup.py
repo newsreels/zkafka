@@ -7,7 +7,7 @@ DESCRIPTION = 'Simple Kafka Avro Consumers and Producers for Ziro Pipeline'
 URL = 'https://github.com/ziroride/zkafka'
 EMAIL = 'alfred@newsinbullets.com'
 AUTHOR = 'Alfred Ray Jayag'
-VERSION = '1.3.0'
+VERSION = '1.8.0'
 
 REQUIRED = [
     'confluent-kafka[avro]',
@@ -31,7 +31,7 @@ setuptools.setup(
     url=URL,
     python_requires='>=3.6',
     package_dir={'': 'src'},
-    packages=setuptools.find_packages(where='src', include=['zkafka']),
+    packages=setuptools.find_packages('src'),
     package_data = {'': ['data/article.json']},
     install_requires=REQUIRED,
     include_package_data=True,
