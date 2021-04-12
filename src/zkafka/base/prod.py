@@ -34,7 +34,7 @@ class Producer:
             conf.update(config)
         self.client = SerializingProducer(conf)
     
-    def send_data(self, msg, key=None, flush=False, poll=True):
+    def send_data(self, msg: str, key=None, flush=False, poll=True):
         if not self.topic:
             raise Exception("Invalid topic ", self.topic)
         if poll:

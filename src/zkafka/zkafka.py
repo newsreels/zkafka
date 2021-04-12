@@ -5,8 +5,8 @@ from .avro import Producer as AvroProducer
 import os
 
 class Consumer:
-    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None):
-        if os.getenv("KAFKA_SCHEMA_URL") and os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
+    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None, mode=""):
+        if mode!="base" and (os.getenv("KAFKA_SCHEMA_URL") and os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET")):
             if verbose:
                 print("AVRO CONSUMER")
             self.client = AvroConsumer(topic, client_id, group_id, config, verbose, kill_event)
@@ -37,8 +37,8 @@ class Consumer:
         self.client.close()
 
 class Producer:
-    def __init__(self, topic=None, config={}, verbose=False, prune=True, schemapath=None):
-        if os.getenv("KAFKA_SCHEMA_URL") and os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
+    def __init__(self, topic=None, config={}, verbose=False, prune=True, schemapath=None, mode=""):
+        if mode!="base" and os.getenv("KAFKA_SCHEMA_URL") and os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
             if verbose:
                 print("AVRO PRODUCER")
             self.client = AvroProducer(topic, config, verbose, prune, schemapath)

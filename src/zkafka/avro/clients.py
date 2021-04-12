@@ -279,7 +279,7 @@ class Producer(BaseClient):
             if self.verbose:
                 print("Delivered {} [{}]".format(msg.topic(), msg.partition()))
             
-    def send_data(self, msg, key=None, flush=False, poll=True):
+    def send_data(self, msg: dict, key=None, flush=False, poll=True):
         if poll:
             self.client.poll(0)
         try:
