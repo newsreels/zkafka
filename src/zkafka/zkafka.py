@@ -21,7 +21,11 @@ class Consumer:
         return self.client.consume(value, poll)
     
     def get_data(self, value=False, poll=3.0):
+        wait = 1
         while 1:
+            if wait:
+                print("waiting for data...")
+                wait = 0
             msg = self.client.consume(value, poll)
             if not msg:
                 continue
