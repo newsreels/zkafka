@@ -9,15 +9,15 @@ import traceback
 from datetime import datetime
 from dateutil import parser
 from .. import bugsnagLogger as bugsnag
-from .config import config
+from .config import config as client_config
 import uuid
 import threading
 import json
 
 class Producer:
-    def __init__(self, topic=None):
+    def __init__(self, topic, config={}, verbose=False, prune=True, schemapath=None):
         self.topic = topic
-        self.new()
+        self.new(config)
 
     def delivery(self, err, msg):
         if err is not None:
@@ -25,16 +25,16 @@ class Producer:
         else:
             print("ok, ", msg)
 
-    def new(self, override={}):
-        conf= {**config(), **{
+    def new(self, config={}):
+        conf= {**client_config(), **{
             "key.serializer": StringSerializer("utf_8"),
             "value.serializer": StringSerializer("utf_8")
         }}
-        if override:
-            conf.update(override)
+        if config:
+            conf.update(config)
         self.client = SerializingProducer(conf)
     
-    def send(self, msg, key=None, flush=False, poll=True):
+    def send_data(self, msg, key=None, flush=False, poll=True):
         if not self.topic:
             raise Exception("Invalid topic ", self.topic)
         if poll:
