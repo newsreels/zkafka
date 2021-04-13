@@ -49,6 +49,9 @@ class Producer:
             if flush:
                 self.flush()
         return 0
+    
+    def produce(self, topic, key=None, value=None, partition=-1, on_delivery=None, timestamp=0, headers=None):
+        return self.client.produce(topic, key=key, value=value, partition=partition, on_delivery=on_delivery, timestamp=timestamp, headers=headers)
 
     def flush(self):
         return self.client.flush()

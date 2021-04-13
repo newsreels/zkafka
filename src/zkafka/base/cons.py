@@ -96,6 +96,9 @@ class Consumer:
         except Exception as e:
             bugsnag.notify(e)
             traceback.print_exc()
+    
+    def poll(self, t):
+        return self.client.poll(t)
 
     def unpack(self, val):
         if isinstance(val, Message):

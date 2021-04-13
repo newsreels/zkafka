@@ -184,6 +184,9 @@ class Consumer(BaseClient):
         else:
             traceback.print_exc()
             bugsnag.notify(msg.error())
+    
+    def poll(self, t): # compat func
+        return self.client.poll(t)
 
     def unpack(self, payload):
         if not isinstance(payload, bytes):
@@ -288,6 +291,9 @@ class Producer(BaseClient):
             traceback.print_exc()
         if flush:
             self.client.flush()
+    
+    def produce(self, topic, key=None, value=None, partition=-1, on_delivery=None, timestamp=0, headers=None):
+        return self.client.produce(topic, key=key, value=value, partition=partition, on_delivery=on_delivery, timestamp=timestamp, headers=headers)
 
     def flush(self):
         return self.client.flush()
