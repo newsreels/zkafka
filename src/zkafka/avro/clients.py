@@ -98,11 +98,10 @@ class Consumer(BaseClient):
             "session.timeout.ms": int(os.getenv("KAFKA_TIMEOUT_MS")) if os.getenv("KAFKA_TIMEOUT_MS") else 6000,
             "auto.offset.reset": "earliest"
         }
+        settings.update(self._client_settings)
 
         if config:
             settings.update(config)
-
-        settings.update(self._client_settings)
         if VERBOSE:
             print("_SETTINGS: ", settings)
         if VERBOSE:
@@ -239,11 +238,11 @@ class Producer(BaseClient):
             "value.serializer": avro_serializer,
             "stats_cb": self.stats_report,
         }
+        settings.update(self._client_settings)
 
         if config:
             settings.update(config)
 
-        settings.update(self._client_settings)
         if VERBOSE:
             print("PRODUCER_SETTINGS: ", settings)
         self.client = SerializingProducer(settings)
