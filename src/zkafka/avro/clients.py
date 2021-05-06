@@ -23,21 +23,13 @@ VERBOSE = os.getenv("KAFKA_VERBOSE")
 
 class BaseClient:
     def __init__(self, topic, schemapath=None):
-        schema_path = schemapath if schemapath is not None else os.getenv("KAFKA_SCHEMA_PATH")
+        schema_path = schemapath or os.getenv("KAFKA_SCHEMA_PATH")
         schema_str = ""
         self.schema_json = {}
         if schema_path:
             with open(schema_path) as fr:
                 schema_str = fr.read()
-                schema = avro.loads(schema_str)
                 self.schema_json = json.loads(schema_str)
-        else:
-            with open(os.path.join(os.path.dirname(os.path.abspath(os.path.dirname(__file__))), "data", "article.json")) as fr:
-                schema_str = fr.read()
-                schema = avro.loads(schema_str)
-                self.schema_json = json.loads(schema_str)
-        if not schema:
-            raise Exception("No schema provided!")
         if VERBOSE:
             print("SCHEMA_PATH: ", schema_path)
         schema_settings = {
@@ -81,8 +73,8 @@ class BaseClient:
         self._schema_settings = schema_settings
 
 class Consumer(BaseClient):
-    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None, schemapath=""):
-        super().__init__(topic, schemapath) # empty string do not use env by default; set to None to use env
+    def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None, schema_path=""):
+        super().__init__(topic, schema_path)
         self.topic = topic
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
