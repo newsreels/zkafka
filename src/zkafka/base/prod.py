@@ -40,7 +40,12 @@ class Producer:
         if poll:
             self.client.poll(0)
         try:
-            self.client.produce(topic=self.topic, value=str(msg), key=key if key else str(uuid.uuid4()))
+            if isinstance(msg, dict) or isinstance(msg, list):
+                try:
+                    msg = json.dumps(msg)
+                except: 
+                    pass
+            self.client.produce(topic=self.topic, value=msg, key=key if key else str(uuid.uuid4()))
         except Exception as e:
             bugsnag.notify(e)
             traceback.print_exc()
