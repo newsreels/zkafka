@@ -4,10 +4,11 @@ import socket
 import logging
 import bugsnag
 from bugsnag.handlers import BugsnagHandler
+import traceback
 root_path = os.path.dirname(os.path.abspath(__file__))
 logger = logging.getLogger()
 
-BASIC_FORMAT = "%(levelname)s:%(hostname)s:%(name)s:%(message)s"
+BASIC_FORMAT = f"%(levelname)s:{os.getenv('HOSTNAME')}:%(name)s:%(message)s"
 
 if os.getenv("ENABLE_FILE_LOG") or os.name == 'nt':
     fh = logging.FileHandler("rss_errors.log")
@@ -38,7 +39,7 @@ def notify(e):
         except:
             pass
     else:
-        return
+        traceback.print_exc()
 
 class ScriptExit(Exception):pass
 class SigKill(Exception):pass
