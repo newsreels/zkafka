@@ -43,15 +43,15 @@ class BaseClient:
             
             if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
                 schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
-            # else:
-            #     schema_settings.update({"basic.auth.user.info": ':'})
+            else:
+                schema_settings.update({"basic.auth.user.info": ':'})
 
         elif not os.getenv("KAFKA_USE_LOCAL"):
 
             if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
                 schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
-            # else:
-            #     schema_settings.update({"basic.auth.user.info": ''})
+            else:
+                schema_settings.update({"basic.auth.user.info": ''})
 
         settings = {
             "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
