@@ -56,7 +56,7 @@ class BaseClient:
         settings = {
             "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
         }
-        if os.getenv("KAFKA_USE_SSL"):
+        if os.getenv("KAFKA_USE_SSL"): pass
             # settings.update({
             #     "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
             #     "sasl.mechanism": "PLAIN",
