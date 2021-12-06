@@ -23,71 +23,85 @@ VERBOSE = os.getenv("KAFKA_VERBOSE")
 
 class BaseClient:
     def __init__(self, topic, schemapath=None):
+
         schema_path = schemapath or os.getenv("KAFKA_SCHEMA_PATH")
         schema_str = ""
         self.schema_json = {}
+        
+        if VERBOSE: print("SCHEMA_PATH: ", schema_path)
         if schema_path:
             with open(schema_path) as fr:
                 schema_str = fr.read()
                 self.schema_json = json.loads(schema_str)
-        if VERBOSE:
-            print("SCHEMA_PATH: ", schema_path)
-        schema_settings = {
-            "url": os.getenv("KAFKA_SCHEMA_URL"),
-        }
+        
+        schema_settings = {"url": os.getenv("KAFKA_SCHEMA_URL")}
+
+        if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
+            schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
+
         # if os.getenv("KAFKA_USE_SSL"):
-        #     schema_settings.update({
-        #         "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe",
-        #         "ssl.key.location": os.getenv("KAFKA_SSL_PRIV_PATH"),
-        #         "ssl.certificate.location": os.getenv("KAFKA_SSL_PUB_KEY")})
+            # schema_settings.update({
+            #     "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe",
+            #     "ssl.key.location": os.getenv("KAFKA_SSL_PRIV_PATH"),
+            #     "ssl.certificate.location": os.getenv("KAFKA_SSL_PUB_KEY")})
             
-        #     if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
-        #         schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
-        #     else:
-        #         schema_settings.update({"basic.auth.user.info": ':'})
-
+            # if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
+            #     schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
+            # else:
+            #     schema_settings.update({"basic.auth.user.info": ':'})
         # elif not os.getenv("KAFKA_USE_LOCAL"):
+            # if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
+            #     schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
+            # else:
+            #     schema_settings.update({"basic.auth.user.info": ':'})
 
-        #     if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
-        #         schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
-        #     else:
-        #         schema_settings.update({"basic.auth.user.info": ':'})
 
-        settings = {
-            "bootstrap.servers": os.getenv("KAFKA_BROKERS"),
-        }
+        settings = { "bootstrap.servers": os.getenv("KAFKA_BROKERS")}
+
+        if os.getenv("KAFKA_API_KEY") and os.getenv("KAFKA_API_SECRET"):
+            settings.update({
+                "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
+                "sasl.mechanism": "PLAIN",
+                "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe", #/usr/local/etc/openssl/cert.pem
+                "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
+                "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
+            })
         # if os.getenv("KAFKA_USE_SSL"): pass
-        #     # settings.update({
-        #     #     "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
-        #     #     "sasl.mechanism": "PLAIN",
-        #     #     "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe", #/usr/local/etc/openssl/cert.pem
-        #         # "sasl.username": os.getenv("KAFKA_API_KEY") if os.getenv("KAFKA_API_KEY") else '', #<api-key>
-        #         # "sasl.password": os.getenv("KAFKA_API_SECRET")if os.getenv("KAFKA_API_SECRET") else '', #<api-secret>
-        #     # })
+            # settings.update({
+            #     "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
+            #     "sasl.mechanism": "PLAIN",
+            #     "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe", #/usr/local/etc/openssl/cert.pem
+            #     "sasl.username": os.getenv("KAFKA_API_KEY") if os.getenv("KAFKA_API_KEY") else '', #<api-key>
+            #     "sasl.password": os.getenv("KAFKA_API_SECRET")if os.getenv("KAFKA_API_SECRET") else '', #<api-secret>
+            # })
         # elif not os.getenv("KAFKA_USE_LOCAL"):
-        #     settings.update({
-        #         "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
-        #         "sasl.mechanism": os.getenv("KAFKA_SASL_MECHANISM") or "PLAIN",
-        #         # "sasl.username": os.getenv("KAFKA_API_KEY") if os.getenv("KAFKA_API_KEY") else '', #<api-key>
-        #         # "sasl.password": os.getenv("KAFKA_API_SECRET")if os.getenv("KAFKA_API_SECRET") else '', #<api-secret>
-        #     })
+            # settings.update({
+            #     "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
+            #     "sasl.mechanism": os.getenv("KAFKA_SASL_MECHANISM") or "PLAIN",
+            #     # "sasl.username": os.getenv("KAFKA_API_KEY") if os.getenv("KAFKA_API_KEY") else '', #<api-key>
+            #     # "sasl.password": os.getenv("KAFKA_API_SECRET")if os.getenv("KAFKA_API_SECRET") else '', #<api-secret>
+            # })
 
         self._schema_str = schema_str
-        if VERBOSE:
-            print("SCHEMA_STR: ", self._schema_str)
+        if VERBOSE: print("SCHEMA_STR: ", self._schema_str)
+
         self._client_settings = settings
         self._schema_settings = schema_settings
 
 class Consumer(BaseClient):
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None, schema_path=""):
+
         super().__init__(topic, schema_path)
+
         self.topic = topic
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
+
         self._schema_settings.update({
-                'basic.auth.credentials.source': 'user_info'
+            'basic.auth.credentials.source': 'user_info'
         })
         self.register_client = CachedSchemaRegistryClient(self._schema_settings)
+
         settings = {
             "key.deserializer": StringDeserializer("utf-8"),
             "group.id": group_id,
@@ -98,14 +112,14 @@ class Consumer(BaseClient):
         }
         settings.update(self._client_settings)
 
-        if config:
-            settings.update(config)
-        if VERBOSE:
-            print("_SETTINGS: ", settings)
-        if VERBOSE:
-            print("CONSUMER_TOPIC: ", topic)
+        if config: settings.update(config)
+
+        if VERBOSE: print("_SETTINGS: ", settings)
+        if VERBOSE: print("CONSUMER_TOPIC: ", topic)
+
         self.client = DeserializingConsumer(settings)
         self.client.subscribe(topic.split(",") if "," in topic else [topic])
+
         self.config = {
             "raise.uncommitted": bool(os.getenv("KAFKA_RAISE_UNCOMMITED")),
             "auto.commit": bool(os.getenv("KAFKA_COMMIT_PREVOUS"))
@@ -225,14 +239,18 @@ class Consumer(BaseClient):
 
 class Producer(BaseClient):
     def __init__(self, topic, config={}, verbose=False, prune=True, schemapath=None):
+        
         super().__init__(topic, schemapath)
+
         self.topic = topic
         self.verbose = verbose
         self.prune = prune
-        if VERBOSE:
-            print("SCHEMA_SETTINGS: ", self._schema_settings)
+
+        if VERBOSE: print("SCHEMA_SETTINGS: ", self._schema_settings)
+
         self.schema_registry_client = SchemaRegistryClient(self._schema_settings)
         avro_serializer = AvroSerializer(self.schema_registry_client, self._schema_str, self.serialize)
+
         settings = {
             "on_delivery": self.delivery_report,
             "key.serializer": StringSerializer('utf-8'),
@@ -241,11 +259,9 @@ class Producer(BaseClient):
         }
         settings.update(self._client_settings)
 
-        if config:
-            settings.update(config)
+        if config: settings.update(config)
 
-        if VERBOSE:
-            print("PRODUCER_SETTINGS: ", settings)
+        if VERBOSE: print("PRODUCER_SETTINGS: ", settings)
         self.client = SerializingProducer(settings)
 
     def serialize(self, data, ctx):
