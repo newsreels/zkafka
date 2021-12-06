@@ -7,6 +7,7 @@ import os
 class Consumer:
     def __init__(self, topic, client_id="client-1", group_id="group-1", config={}, verbose=False, kill_event=None, mode=""):
         # if mode!="base" and (os.getenv("KAFKA_SCHEMA_URL") and os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET")):
+        verbose=True
         if mode!="base" and os.getenv("KAFKA_SCHEMA_URL"):
             if verbose:
                 print("AVRO CONSUMER")
