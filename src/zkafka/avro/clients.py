@@ -37,7 +37,7 @@ class BaseClient:
         schema_settings = {"url": os.getenv("KAFKA_SCHEMA_URL")}
 
         if os.getenv("KAFKA_SCHEMA_API_KEY") and os.getenv("KAFKA_SCHEMA_API_SECRET"):
-            schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET")}) #<api-key>:<api-secret>
+            schema_settings.update({"basic.auth.user.info": os.getenv("KAFKA_SCHEMA_API_KEY")+":"+os.getenv("KAFKA_SCHEMA_API_SECRET"), "basic.auth.credentials.source": "user_info"}) #<api-key>:<api-secret>
 
         # if os.getenv("KAFKA_USE_SSL"):
             # schema_settings.update({
@@ -97,9 +97,6 @@ class Consumer(BaseClient):
         self.verbose = verbose
         self.kill_flag = kill_event or threading.Event()
 
-        self._schema_settings.update({
-            'basic.auth.credentials.source': 'user_info'
-        })
         self.register_client = CachedSchemaRegistryClient(self._schema_settings)
 
         settings = {
