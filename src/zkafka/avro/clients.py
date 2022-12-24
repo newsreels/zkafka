@@ -61,7 +61,7 @@ class BaseClient:
         if os.getenv("KAFKA_API_KEY") and os.getenv("KAFKA_API_SECRET"):
             settings.update({
                 "security.protocol": os.getenv("KAFKA_SEC_PROTOCOL") or "SASL_SSL",
-                "sasl.mechanism": "PLAIN",
+                # "sasl.mechanism": "PLAIN",
                 "ssl.ca.location": os.getenv("KAFKA_CERT_FILEPATH") or "probe", #/usr/local/etc/openssl/cert.pem
                 "sasl.username": os.getenv("KAFKA_API_KEY"), #<api-key>
                 "sasl.password": os.getenv("KAFKA_API_SECRET"), #<api-secret>
