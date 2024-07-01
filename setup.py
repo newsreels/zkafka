@@ -5,9 +5,9 @@ import os
 NAME = 'zkafka'
 DESCRIPTION = 'Simple Kafka Avro Consumers and Producers for Ziro Pipeline'
 URL = 'https://github.com/ziroride/zkafka'
-EMAIL = 'alfred@newsinbullets.com'
-AUTHOR = 'Alfred Ray Jayag'
-VERSION = '1.8.0'
+EMAIL = 'contact@newsreels.app'
+AUTHOR = ''
+VERSION = ''
 
 REQUIRED = [
     'confluent-kafka[avro]',
